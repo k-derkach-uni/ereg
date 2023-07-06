@@ -1,0 +1,144 @@
+{% extends 'patient_base.html' %}
+
+{% block title %}Мои записи на прием{% endblock %}
+
+
+
+{% block content %}
+    <h3>Мои записи на прием</h3>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="d-flex justify-content-end mb-3">
+                <a href="{% url 'appointments:p_specialities' %}" class="btn btn-success">Записаться на прием</a>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <h1>{{ title }}</h1>
+            {% if not appointments_list %}
+                <h5 class="text-center">У вас еще нет записей</h5>
+            {% else %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            
+                            <th>Специальность</th>
+                            <th>ФИО Врача</th>
+                            <th>Каб.</th>
+                            <th>Дата и время</th>
+                            <th>Статус приема</th>
+                            
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments_list %}
+                            <tr>
+                                
+                                <td>{{ appointment.doctor.doctorproperties.speciality.name }}</td>
+                                <td>{{ appointment.doctor.get_full_name }}</td>
+                                <td>{{ appointment.doctor.doctorproperties.cabinet }}</td>
+                                
+                                <td>{{ appointment.date }} {{appointment.time}}</td>
+                                <td class="align-middle ">
+                                    
+                                    <span class=" justify-content-center badge w-100 {% if appointment.status == 'WAITING' %}bg-warning {% elif appointment.status == 'COMPLETED' %}bg-success {% elif appointment.status == 'MISSED' or  appointment.status == 'CANCELLED' or  appointment.status == 'PATIENT_CANCELLED' %}bg-danger{% endif %}">
+                                      {{ appointment.get_status }}
+                                    </span>
+                                </td>
+                                <td class="align-middle">
+                                {%if appointment.status == 'WAITING'%}<div class="d-flex justify-content-center ">
+                                    <a href="#" data-appointment-id="{{appointment.id}}" class="btn btn-sm btn-outline-danger cancel-appointment-btn ">Отменить</a>
+                                </div>{%endif%}
+                            </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+
+
+
+
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="cancelModalLabel">Отменить запись?</h5>
+            </div>
+            <div class="modal-body">
+              <p><b>Врач: </b><span id="nametext"></span></p>
+              <p><b>Время записи:</b> <span id="timetext"></span> </p>
+              
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+              <a id="cancelBtn" href="#" class="btn btn-danger">Оменить запись</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    
+      <script>
+
+        $(document).ready(function() {
+            
+
+            $(document).on('click', '.cancel-appointment-btn', function() {
+                var row = $(this).data('row');
+                var appointmentId = $(this).data('appointment-id');
+        
+                // Отобразить модальное окно с подтверждением
+                $('#cancelModal').modal('show');
+               
+                var rowIndex = $(this).closest('tr').index();
+                
+                // Получение текста из первого столбца таблицы для выбранной строки
+                 
+                $('#nametext').text($('table tr').eq(rowIndex+1).find('td:eq(1)').text()+' ('+$('table tr').eq(rowIndex+1).find('td:eq(0)').text()+')');
+                $('#timetext').text($('table tr').eq(rowIndex+1).find('td:eq(2)').text());
+                
+                
+                // Обработчик события нажатия кнопки подтверждения в модальном окне
+                $('#cancelModal').on('click', '#cancelBtn', function() {
+                    var selectedDate = $('#selected_date').val();
+                  // Отправить запрос на сервер
+                  $.ajax({
+                    url: "{%url 'appointments:p_cancel_appointment'%}",
+                    method: 'POST',
+                    data: {
+                      appointment_id: appointmentId,
+                      
+                      csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                       // Обработка успешного ответа от сервера
+                      console.log(response);
+                      window.location.href = "{% url 'appointments:p_appointments' %}";
+                      // Дополнительный код, если необходимо
+                    },
+                    error: function(xhr, errmsg, err) {
+                      // Обработка ошибки
+                      
+                      console.log(xhr.status + ': ' + xhr.responseText);
+                      // Дополнительный код, если необходимо
+                    }
+                  });
+              
+                  // Закрыть модальное окно
+                  $('#cancelModal').modal('hide');
+                });
+              });
+              $(document).on('click', '.btn-secondary', function() {
+                // Закрыть модальное окно
+                $(this).closest('.modal').modal('hide');
+              });
+        });
+        
+              
+      </script>
+
+
+{% endblock %}

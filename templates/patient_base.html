@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Подключение CSS Font Awesome -->
+
+
+    <title>{% block title %}{% endblock %}</title>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Подключение Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+</head>
+<body>
+
+<div class="container-fluid" style="height: 100vh;" >
+    <div class="row flex-nowrap h-100">
+        <div  class="col-auto col-md-4 col-xl-3 px-sm-2 px-0 navbar navbar-expand-lg navbar-dark bg-primary py-0">
+            <div class="min-vh-100 d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
+                <a class="navbar-brand d-none d-sm-block fs-4" href="#">
+                    <div class="d-flex align-items-center">
+                        <i class="fs-2 bi bi-heart-pulse align-middle"></i>
+                        <span class="p-4 align-middle">{{POLYCLINIC_NAME}}</span>
+                    </div>
+                    
+                <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+                    
+
+                    <li>
+                        <a href="{%url 'schedule:schedule'%}" class="nav-link px-0 d-flex align-items-center">
+                            <i class="fs-4 me-2 bi-house-door-fill"></i>
+                            <span class="d-none d-sm-inline">На главную</span>
+                          </a>
+                          
+                    </li>
+
+
+                    <li>
+                        <a href="{%url 'schedule:schedule'%}" class="nav-link px-0 d-flex align-items-center {% if '/schedule/' in request.path %} active{% endif %} ">
+                            <i class="fs-4 me-2 bi-table"></i>
+                            <span class="d-none d-sm-inline">Расписание врачей</span>
+                          </a>
+                          
+                    </li>
+                    <li>
+                        {% url 'appointments:p_appointments' as p_appointments_url %}
+
+                        <a href="{{p_appointments_url}}" class="nav-link px-0 d-flex align-items-center {% if request.path == p_appointments_url or 'appointments/sp' in request.path or 'create' in request.path %} active{% endif %} ">
+                            <i class="fs-4 me-2 bi-list-ul"></i>
+                            <span class="d-none d-sm-inline">Мои записи на прием</span>
+                          </a>
+                    </li>                    
+
+                    {% url 'appointments:p_referrals' as p_referrals_url %}
+
+                    <li>
+                        <a href="{{p_referrals_url}}" class="nav-link px-0 d-flex align-items-center {% if request.path == p_referrals_url %} active{% endif %} ">
+                            <i class="fs-4 me-2 bi-file-earmark-medical"></i>
+                            <span class="d-none d-sm-inline">Мои направления</span>
+                          </a>
+                    </li>                    
+
+
+                    {% comment %} <li>
+                        <a href="{%url 'appointments:p_appointments'%}" class="nav-link px-0 d-flex align-items-center ">
+                            <i class="fs-4 me-2 bi-clipboard2-pulse-fill"></i>
+                            <span class="d-none d-sm-inline">Моя медкарта</span>
+                          </a>
+                    </li>      {% endcomment %}
+
+                    <li>
+                        <a href="{%url 'payments:p_payments'%}" class="nav-link px-0 d-flex align-items-center {% if 'payments' in request.path  %} active{% endif %} ">
+                            <i class="fs-4 me-2 bi-credit-card"></i>
+                            <span class="d-none d-sm-inline">Мои оплаты</span>
+                          </a>
+                          
+                    </li>
+
+
+
+
+                   <li>
+                        <a href="#" class="nav-link px-0 d-flex align-items-center">
+                            <i class="fs-4 me-2 bi bi-person-fill"></i>
+                            <span class="d-none d-sm-inline">Профиль</span>
+                          </a>
+                    </li>
+
+                    
+                </ul>
+                <hr class="hr"> 
+                <span class="d-none d-sm-inline fs-5 px-2">
+                    {{ user.get_short_name }} <small class="form-text text-muted">({{user.id}})</small>
+                </span>
+            
+                <a href="{%url 'logout'%}" class="text-danger nav-link px-0 d-flex align-items-center">
+                    <i class="fs-4 bi bi-box-arrow-left me-2"></i>
+                    <span class="d-none d-sm-inline">Выйти</span>
+                  </a>
+
+                  
+                
+               
+            </div>
+                
+            
+        </div>
+        <div class="col overflow-auto">
+    
+
+        <nav class="py-2" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+
+            
+            {%block nav%}{%endblock%}
+            </ol>
+        </nav>
+        {%block content%}{%endblock%}
+       
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

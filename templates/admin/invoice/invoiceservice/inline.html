@@ -1,0 +1,30 @@
+{% load i18n admin_static %}
+{% load payments_admin %}
+<script>alert('da')</script>
+
+<tr class="form-row dynamic-invoiceservice_set" id="invoiceservice_set-0">
+    <td class="original">
+        <input type="hidden" name="invoiceservice_set-0-id" id="id_invoiceservice_set-0-id">
+        <input type="hidden" name="invoiceservice_set-0-invoice" id="id_invoiceservice_set-0-invoice">
+    </td>
+    <td class="field-service">
+        <select name="invoiceservice_set-0-service" class="service-select">
+            <option value="" selected>---------</option>
+            <option value="1" data-price="10">Service 1</option>
+            <option value="2" data-price="15">Service 2</option>
+            <option value="3" data-price="20">Service 3</option>
+        </select>
+    </td>
+    <td class="field-quantity">
+        <input type="number" name="invoiceservice_set-0-quantity" class="quantity-input" value="1" min="0">
+    </td>
+    <td class="field-price">
+        <input type="number" name="invoiceservice_set-0-price" step="0.01" class="price-input" readonly>
+    </td>
+    <td class="field-total_price">
+        <p class="total-price">-</p>
+    </td>
+    <td class="delete">
+        <div><a class="inline-deletelink" href="#">Delete</a></div>
+    </td>
+</tr>

@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block extrahead %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Подключение Bootstrap JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="{% static 'admin.css' %}">
+
+{% endblock %}
+
+{%block usertools%}
+    {{block.super}}
+{%endblock%}
+
+{% block branding %}
+<h1 id="site-name"><a style="color:white" href="{% url 'admin:index' %}">{{ POLYCLINIC_NAME }}</a></h1>
+{% endblock %}

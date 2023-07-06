@@ -1,0 +1,156 @@
+{% extends 'patient_base.html' %}
+
+{% load static %}
+
+{% block title %}Записаться на прием{% endblock %}
+
+{% block nav %}
+    <li class="breadcrumb-item"><a href="{%url 'appointments:p_appointments'%}">Мои записи на прием</a></li> 
+    <li class="breadcrumb-item"><a href="{%url 'appointments:p_specialities'%}">Записаться</a></li> 
+    <li class="breadcrumb-item"><a href="{%url 'appointments:p_speciality' doctor.doctorproperties.speciality.id %}">{{ doctor.doctorproperties.speciality }}</a></li> 
+    <li class="breadcrumb-item active">{{ doctor.get_full_name }}</li> 
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="card m-2" style="max-width: 600px;">
+    <div class="row no-gutters align-items-center">
+      <div class="col-md-3 m-md-3 m-sm-0 my-1">
+        {% if doctor.doctorproperties.image %}
+          <div class="circle-avatar d-flex justify-content-center">
+            <img style="max-width:250px; border-radius: 50%;" class="w-100" src="{{ doctor.doctorproperties.image.url }}" class="rounded-circle">
+          </div>
+        {% else %}
+          <div class="circle-avatar d-flex justify-content-center">
+            <img style="max-width:250px" class="w-100" src="{% static 'images/person-circle.svg' %}" class="rounded-circle">
+          </div>
+        {% endif %}
+      </div>
+      <div class="col-md-8">
+        <div class="card-body">
+          <h5 class="card-title">{{ doctor }}</h5>
+          <p class="text-muted">{{ doctor.speciality }}</p>
+          <div class="card-text"><b>Пол: </b>{% if doctor.sex %}мужчина{% else %}женщина{% endif %}</div>
+          <div class="card-text"><b>Возраст: </b>{{ doctor.age }}</div>
+          <br>
+          <div class="card-text">{{ doctor.phone_number }}</div>
+          <div class="card-text">{{ doctor.username }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <h5 class="mx-2 mt-5" >Записаться на прием</h5>
+  <form method="GET" class="form-inline m-2">
+    <div class="form-group mr-2">
+      <label for="selected_date">Выберите дату:</label>
+      <input type="date" name="selected_date" id="selected_date" class="form-control mr-2 w-50">
+      <input type="hidden" name="referral_id" value="{{ referral_id }}">
+    </div>
+    <button type="submit" class="btn btn-primary my-2">Поиск</button>
+  </form>
+
+  {% if selected_date %}
+    <h4>Свободные места на {{ selected_date }}</h4>
+    {% if available_slots %}
+      <div style="max-width:700px" class="">
+        {% for slot in available_slots %}
+          <a style="min-width:100px;" class="btn btn-success min-w-100 m-1 slot">{{ slot }}</a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>Нет доступных мест на выбранную дату.</p>
+    {% endif %}
+  {% endif %}
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmModalLabel">Подтверждение записи</h5>
+        </div>
+        <div class="modal-body">
+          <p>{{ doctor }}?</p>
+          <p>Дата и время приема: <span id="datetimetext">{{ selected_date }} </span> </p>
+          <p>Записаться на прием?</p>
+          
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+          <a id="confirmBtn" href="#" class="btn btn-primary">Записаться</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="error-container"></div>
+  <script>
+    $(document).ready(function() {
+        // Получение значения параметра selected_date из URL-адреса
+        var urlParams = new URLSearchParams(window.location.search);
+        var selectedDate = urlParams.get('selected_date');
+      
+        // Установка значения параметра selected_date в поле ввода даты
+        $('#selected_date').val(selectedDate);
+      });
+      
+        $(document).on('click', '.slot', function() {
+
+            var slot = $(this).text();
+            var selectedDate = '{{ selected_date }}'; // Здесь нужно передать значение выбранной даты из вашего контекста
+            
+            
+            // Отобразить модальное окно с подтверждением
+            $('#confirmModal').modal('show');
+            $('#datetimetext').text("{{selected_date}} "+slot)
+          
+            // Обработчик события нажатия кнопки подтверждения в модальном окне
+            $('#confirmModal').on('click', '#confirmBtn', function() {
+                var selectedDate = $('#selected_date').val();
+              // Отправить запрос на сервер
+              $.ajax({
+                url: "{%url 'appointments:p_save_appointment'%}",
+                method: 'POST',
+                data: {
+                  selected_date: selectedDate,
+                  slot: slot,
+                  doctor_id: {{doctor.id}},
+                  {% if referral_id and referral_id != "None" %}
+                      referral_id: {{ referral_id }},
+                  {% endif %}
+                  csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(response) {
+                  if (response.success) {
+                    // Обработка успешного ответа от сервера
+                    console.log(response.message);
+                    window.location.href = "{% url 'appointments:p_appointments' %}";
+                    // Дополнительный код, если необходимо
+                  } else {
+                    var errorAlert = $('<div class="alert alert-danger" role="alert">').text('Вы уже записаны на прием к этому врачу');
+                      $('#error-container').empty().append(errorAlert);
+                    // Вывод сообщения об ошибке
+                    console.log(response.message);
+                    // Дополнительный код, если необходимо
+                  }
+                },
+                error: function(xhr, errmsg, err) {
+                  // Обработка ошибки
+                  
+                  console.log(xhr.status + ': ' + xhr.responseText);
+                  // Дополнительный код, если необходимо
+                }
+              });
+          
+              // Закрыть модальное окно
+              $('#confirmModal').modal('hide');
+            });
+          });
+          $(document).on('click', '.btn-secondary', function() {
+            // Закрыть модальное окно
+            $(this).closest('.modal').modal('hide');
+          });
+          
+      
+  </script>
+{% endblock %}

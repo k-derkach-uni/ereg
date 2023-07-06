@@ -1,0 +1,85 @@
+{% extends 'patient_base.html' %}
+{%load static%}
+{% block title %}Подобрать специалиста{% endblock %}
+
+{% block nav %}
+    <li class="breadcrumb-item"><a href="{%url 'appointments:p_appointments'%}">Мои записи на прием</a></li> 
+    <li class="breadcrumb-item"><a href="{%url 'appointments:p_specialities'%}">Записаться</a></li> 
+    <li class="breadcrumb-item active">{{ speciality.name }}</li> 
+{% endblock %}
+
+
+{% block content %}
+<h3>Выберите врача: {{ speciality.name }}</h3>
+
+<form method="GET" class="form-inline">
+  <div class="form-group mb-2">
+    <label for="selected_date" class="mr-2">Можете найти доступных врачей по дате:</label>
+    <input type="date" name="selected_date" id="selected_date" class="form-control mr-2 w-50">
+    <input type="hidden" name="referral_id" value="{{ referral_id }}">
+  </div>
+  <button type="submit" class="btn btn-primary mb-2">Поиск</button>
+</form>
+
+
+{% if doctors %}
+    {%if selected_date%}
+        <h5 class="text-center py-3">Врачи, доступные {{selected_date}}</h5>
+    {%endif%}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Врач</th>
+        {% if selected_date %}
+          <th></th>
+        {% endif %}
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doctor in doctors %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center">
+              {% if doctor.doctorproperties.image %}
+                <div class="circle-avatar">
+                  <img width="55" src="{{ doctor.doctorproperties.image.url }}" alt="{{ doctor.get_full_name }}" class="rounded-circle me-3">
+                </div>
+              {% else %}
+
+              <img width="55" src="{% static 'images/person-circle.svg' %}" alt="{{ doctor.get_full_name }}" class="rounded-circle me-3">
+              {% endif %}
+              <span class="ml-2">{{ doctor.get_full_name }}</span>
+            </div>
+          </td>
+          <td class="col-md-4 col-sm-4 align-middle">
+            <div class="d-flex justify-content-center">
+            {%if selected_date%}
+              <a href="{%url 'appointments:p_create_appointment' doctor.id%}?selected_date={{selected_date|date:'Y-m-d'}}&referral_id={{referral_id}}" class="btn btn-outline-success ">Записаться на прием</a>
+            {%else%}
+              <a href="{%url 'appointments:p_create_appointment' doctor.id%}?referral_id={{referral_id}}" class="btn btn-outline-success ">Записаться на прием</a>
+            {%endif%}
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  {% if selected_date %}
+    <h5 class="text-center py-3">Нет доступных врачей на выбранную дату</h5>
+  {% else %}
+    <p>Нет доступных врачей для выбранной специальности</p>
+  {% endif %}
+{% endif %}
+<script>
+    $(document).ready(function() {
+        // Получение значения параметра selected_date из URL-адреса
+        var urlParams = new URLSearchParams(window.location.search);
+        var selectedDate = urlParams.get('selected_date');
+      
+        // Установка значения параметра selected_date в поле ввода даты
+        $('#selected_date').val(selectedDate);
+      });
+</script>
+{% endblock %}

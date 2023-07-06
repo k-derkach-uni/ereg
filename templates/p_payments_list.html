@@ -1,0 +1,55 @@
+{% extends 'patient_base.html' %}
+
+{% block title %}Мои оплаты{% endblock %}
+
+
+
+{% block content %}
+    <h3>Мои оплаты</h3>
+     {% if not payments_list %}
+        <h5 class="text-center">У вас еще нет счетов на оплату</h5>
+    {% else %}
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    
+                    <th>Код счета</th>
+                    <th>Услуги</th>
+                    <th>Сумма</th>
+                    <th>Статус оплаты</th>
+                    
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments_list %}
+                    <tr>
+                        
+                        <td class="align-middle "><a href = "{{payment.id}}">#{{payment.id}}</a></td>
+                        <td class="align-middle ">
+                            <a href = "{{payment.id}}">
+                            {% for service in payment.services.all %}
+                                {{ service.name }}<br>
+                            {% endfor %}
+                            </a>
+                        </td>
+                        <td class="align-middle ">{{ payment.total_amount }} р.</td>
+                        
+                        <td class="align-middle ">
+                            
+                            <span class=" justify-content-center badge w-100 {% if payment.status == 'WAITING' %}bg-danger {% elif payment.status == 'CONFIRMED' %}bg-info {% endif %}">
+                                {{ payment.get_status }}
+                            </span>
+                        </td>
+                       
+                    
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+
+
+
+{% endblock %}

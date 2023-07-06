@@ -1,0 +1,72 @@
+#header{
+  background-color: #2c3e50;
+  padding: 20px;
+  color: #fff;
+}
+
+input[type=submit] {
+  background-color: #2c3e50;
+}
+
+#header a:link, #header a:visited{
+  color:#18bc9c;
+}
+
+input.default{
+  background-color: #18bc9c !important;
+}
+
+#header button {
+  color:#e74c3c;
+}
+
+.module caption, .module h2 {
+  background-color: #3498db;
+
+}
+
+a:link, a:visited{
+  color: #18bc9c;
+}
+
+.module caption, .module h2 a:link, .module caption, .module h2 a:visited{
+  color: #fff !important;
+
+}
+
+#nav-sidebar .current-app .section:visited {
+  color: #fff;
+  font-weight: bold;
+}
+
+div.breadcrumbs{
+  background-color: #3498db;
+  padding: 15px !important;
+}
+
+
+div.breadcrumbs a:link,div.breadcrumbs a:visited{
+ color: #fff !important;
+}
+
+a.deletelink, a.historylink{
+  color: #fff !important;
+}
+
+.object-tools a:link, .object-tools a:visited {
+  background-color:#18bc9c !important;
+}
+
+button[type="submit"] {
+  background-color: #2c3e50 !important;
+  color: white !important; /* Здесь можно указать нужный вам цвет */
+}
+
+
+#toolbar input[type="submit"] {
+  background-color: #2c3e50 !important;
+  color: white !important; /* Здесь можно указать нужный вам цвет */
+} 
+
+
+

@@ -1,0 +1,28 @@
+{% extends 'patient_base.html' %}
+
+{% block title %}Подобрать специалиста{% endblock %}
+
+{% block nav %}
+    <li class="breadcrumb-item"><a href="{%url 'appointments:p_appointments'%}">Мои записи на прием</a></li> 
+    <li class="breadcrumb-item active">Записаться</li> 
+{% endblock %}
+
+{% block content %}
+    <h3>Выберите специальность</h3>
+    {% if specialties %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Специальность</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for speciality in specialties %}
+            <tr>
+                <td><a href="{% url 'appointments:p_speciality' speciality.id %}">{{ speciality.name }}</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>
+        $(document).ready(function() {
+            document.getElementById('id_date').setAttribute('readonly', 'readonly');
+            var previousDoctorId = 0;
+            var previousDate = '';
+            var firstFlag = true;
+          
+            function checkChanges() {
+              var selectElement = document.getElementById('id_doctor');
+              var selectedOption = selectElement.options[selectElement.selectedIndex];
+              var doctorId = parseInt(selectedOption.value);
+              var date = $('#id_date').val();
+          
+              if (firstFlag) {
+                firstFlag = false;
+                previousDoctorId = doctorId; previousDate = date;
+          
+                return; // Прерываем выполнение функции при первом вызове
+                }
+              
+              if (doctorId !== previousDoctorId || date !== previousDate) {
+                previousDoctorId = doctorId;
+                previousDate = date;
+          
+                $.ajax({
+                  url: '{% url 'appointments:doctor_available_slots' %}',
+                  data: {
+                    'date': date,
+                    'doctor_id': doctorId
+                  },
+                  success: function(data) {
+                    var slotSelect = $('#id_time');
+                    slotSelect.empty();
+                    $.each(data, function(i, slot) {
+                      var option = $('<option>').attr('value', slot).text(slot);
+                      slotSelect.append(option);
+                    });
+                  }
+                });
+              }
+            }
+          
+            // Установка интервала проверки изменений каждые 500 миллисекунд
+            setInterval(checkChanges, 500);
+          });
+                    
+    </script>
+{% endblock %}

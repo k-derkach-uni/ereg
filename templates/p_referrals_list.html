@@ -1,0 +1,48 @@
+{% extends 'patient_base.html' %}
+
+{% block title %}Мои записи на прием{% endblock %}
+
+
+
+{% block content %}
+    <h3>Мои направления</h3>
+    {% if not referrals %}
+                <h5 class="text-center">У вас еще нет направлений</h5>
+            {% else %}
+    <table class="table">
+        <thead>
+          <tr>
+            <th>Дата создания направления</th>
+            <th>К специалисту</th>
+            <th>ФИО специалиста</th>
+            <th>Статус приема</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for referral in referrals %}
+          <tr>
+            <td class="align-middle ">{{ referral.date_added }}</td>
+            <td class="align-middle "> {{ referral.speciality }}</td>
+            <td class="align-middle ">
+                {%if referral.appointment.doctor%}
+                {{ referral.appointment.doctor.get_full_name }}
+                {%else%} <b>Не выбран</b> {%endif%}
+            
+            </td>
+            <td class="align-middle ">
+                {% if referral.appointment %}
+                <span class=" justify-content-center badge w-100 {% if referral.appointment.status == 'WAITING' %}bg-warning {% elif referral.appointment.status == 'COMPLETED' %}bg-success {% elif referral.appointment.status == 'MISSED' or  referral.appointment.status == 'CANCELLED' or  referral.appointment.status == 'PATIENT_CANCELLED' %}bg-danger{% endif %}">
+                    {{ referral.appointment.get_status }}
+                  </span>
+              {% else %}
+                <!-- Здесь можно разместить кнопку "Записаться" -->
+                <a href="{% url 'appointments:p_speciality'%}?referral_id={{referral.id}}" class="btn btn-success btn-sm w-100">Записаться на прием</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+{%endif%}
+{% endblock %}

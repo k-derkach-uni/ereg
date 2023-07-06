@@ -1,0 +1,47 @@
+<!-- payment_detail.html -->
+{% extends template %}
+
+
+{% block title %}Детали оплаты счета #{{payment.id}}{% endblock %}
+
+
+
+{% block nav %}
+    <li class="breadcrumb-item"><a href="{%url 'payments:p_payments'%}">Мои оплаты</a></li> 
+    <li class="breadcrumb-item active">Оплата от {{payment.creation_date|date:"d.m.Y" }}</li> 
+{% endblock %}
+
+
+{% block content %}
+  <h3 class="mb-4">Детали оплаты счета #{{payment.id}}</h3>
+  <p><b>Дата создания счета: </b>{{ payment.creation_date|date:"d.m.Y"  }}</p>
+  <p><b>Специалист:</b> {{ payment.doctor.get_full_name }} ({{payment.doctor.doctorproperties.speciality}})</p>
+  
+  <p><b>Статус:</b> <span class="justify-content-center badge {% if payment.status == 'WAITING' %}bg-danger {% elif payment.status == 'CONFIRMED' %}bg-info {% endif %}">
+    {{ payment.get_status }}
+    </span></p>
+  
+  {%if payment.status == 'CONFIRMED'%} 
+    <p><b>Дата оплаты: </b>{{ payment.creation_date|date:"d.m.Y" }}</p>
+  {%endif%}
+    <table class="table table-hover">
+        <thead>
+            <th>Услуга</th>
+            <th>Количество</th>
+            <th>Сумма</th>
+        </thead>
+        <tbody>
+            {% for service in payment.invoiceservice_set.all %}
+            <tr>
+                <td>{{service.service.name}}</td>
+                <td>{{service.quantity}}</td>
+                <td>{{service.total_price}} р.</td>
+            </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+  
+  <h5>Общая сумма: {{ payment.total_amount }} р.</54>
+  <!-- Другие поля оплаты -->
+{% endblock %}

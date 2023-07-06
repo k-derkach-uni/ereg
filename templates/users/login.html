@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Авторизация{% endblock %}
+
+{% block content %}
+<!-- Page content goes here -->
+
+
+
+<form method="post" action="{% url 'users:login' %}" class="col-md-3 mt-5 mx-auto">
+    {% csrf_token %}
+    {{form.username.label_tag}} <br>
+    {{form.username}}<br>
+    
+    {{form.password.label_tag}}<br>
+    {{form.password}}
+
+    
+    {% if form.errors %}
+    Ошибка! Проверьте введенные данные.
+    {% endif %}
+    
+    <button type="submit" class="btn btn-primary mt-2">Войти</button>
+  
+</form>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>{% block title %}{% endblock %}</title>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.15/css/bootstrap-select.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'doctor.css' %}">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.js"></script>
+<script src="{%static 'bootstrap-datepicker.ru.min.js'%}"></script>
+
+
+</head>
+<script>
+$(document).ready(function() {
+$('[data-toggle="tooltip"]').tooltip();
+});
+
+</script>
+<body>
+
+<div class="container-fluid" style="height: 100vh;" >
+<div class="row flex-nowrap h-100">
+<div  class="col-auto col-md-4 col-xl-3 px-sm-2 px-0 navbar navbar-expand-lg navbar-dark bg-primary py-0">
+<div class="min-vh-100 d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
+<a class="navbar-brand d-none d-sm-block fs-4" href="#">
+    <div class="d-flex align-items-center">
+        <i class="fs-2 bi bi-heart-pulse align-middle"></i>
+        <span class="p-4 align-middle">{{POLYCLINIC_NAME}}</span>
+    </div>
+<ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+    <li>
+        <a href="{%url 'schedule:schedule'%}" class="nav-link px-0 d-flex align-items-center">
+            <i class="fs-4 me-2 bi-house-door-fill"></i>
+            <span class="d-none d-sm-inline">На главную</span>
+            </a>
+            
+    </li>
+    <li>
+        <a href="{%url 'schedule:schedule'%}" class="nav-link px-0 d-flex align-items-center {% if '/schedule/' in request.path %} active{% endif %} ">
+            <i class="fs-4 me-2 bi-table"></i>
+            <span class="d-none d-sm-inline">Открыть расписание</span>
+            </a>
+    </li>
+    <li>
+        <a href="{%url 'appointments:d_queue'%}" class="nav-link px-0 d-flex align-items-center {% if '/appointments/' in request.path %} active{% endif %} ">
+            <i class="fs-4 me-2 bi-list-ul"></i>
+            <span class="d-none d-sm-inline">Очередь на сегодня</span>
+            </a>
+    </li>    
+    <li>
+        <a href="{%url 'users:d_patients_list'%}" class="nav-link px-0 d-flex align-items-center {% if '/patients/' in request.path %} active{% endif %}">
+            <i class="fs-4 me-2 bi-people"></i>
+            <span class="d-none d-sm-inline">Найти пациента</span>
+            </a>
+    </li>  
+<li>
+    <a href="#" class="nav-link px-0 d-flex align-items-center">
+        <i class="fs-4 me-2 bi bi-person-fill"></i>
+        <span class="d-none d-sm-inline">Профиль</span>
+    </a>
+</li>
+</ul>
+<hr class="hr"> 
+<span class="d-none d-sm-inline fs-5 px-2">
+    {{ user.get_short_name }} <small class="form-text text-muted">{{user.doctorproperties.speciality}}</small>
+</span>
+
+<a href="{%url 'logout'%}" class="text-danger nav-link px-0 d-flex align-items-center">
+    <i class="fs-4 bi bi-box-arrow-left me-2"></i>
+    <span class="d-none d-sm-inline">Выйти</span>
+    </a>
+
+
+</div>
+
+
+</div>
+<div class="col overflow-auto">
+
+
+<nav class="py-2" aria-label="breadcrumb">
+<ol class="breadcrumb">
+
+
+{%block nav%}{%endblock%}
+</ol>
+</nav>
+<div class="p-2">
+{%block content%}{%endblock%}
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

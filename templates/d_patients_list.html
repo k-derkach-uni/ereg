@@ -1,0 +1,42 @@
+{% extends 'doctor_base.html' %}
+
+{% block title %}Очередь{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">Найти пациента</h3>
+
+
+  <form class="input-group mb-3" method="GET" action="{% url 'users:d_patients_list' %}">
+    <input type="text" class="form-control" name="search" {%if search_query%}value="{{ search_query }}"{%endif%} placeholder="ID или ФИО пациента" aria-label="ID или ФИО пациента" aria-describedby="button-addon2">
+    <button class="btn btn-primary" type="submit" id="button-addon2">Найти пациента</button>
+  </form>
+
+{%if not search_query%}
+<h5 class="my-4">Последние принятые Вами пациенты:</h5>
+
+{%endif%}
+<table class="table table-hover">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>ФИО</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for patient in patients %}
+      <tr>
+        <td>{{ patient.id }}</td>
+        <td>{{ patient.get_full_name }}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-info" onclick="viewPatient({{ patient.id }})">Просмотр</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="deletePatient({{ patient.id }})">Удалить</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if search_query %}
+  <a href = "{%url 'users:d_patients_list'%}">Просмотреть последних</a>  
+  {%endif%}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>
+    $(document).ready(function() {
+    $('input[type=date]').on('change', function() {
+        var date = $(this).val();
+        $.ajax({
+        url: '{% url 'doctor_available_slots' %}',
+        data: {
+            'date': date
+        },
+        success: function(data) {
+            var slotSelect = $('#id_time');
+            slotSelect.empty();
+            $.each(data, function(i, slot) {
+            var option = $('<option>').attr('value', slot).text(slot);
+            slotSelect.append(option);
+            });
+        }
+        });
+    });
+    });
+    alert();
+    </script>
+{% endblock %}

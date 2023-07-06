@@ -1,0 +1,204 @@
+{% extends template %}
+
+
+{% load static %}
+
+{% load humanize %}
+{% load custom_tags %}
+{% block extrahead %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Подключение Bootstrap JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+
+<link rel="stylesheet" type="text/css" href="{% static 'admin.css' %}">
+    
+{% endblock %}
+
+{% block title %}Расписание врачей{% endblock %}
+
+
+{%if request.user.is_staff%}
+{%block usertools%} {{block.super}} {%endblock%}
+{%endif%}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">Начало</a>
+ &rsaquo; Расписание
+</div>
+{% endblock %}
+ 
+
+{% block content %}<!-- jQuery -->
+    <h3>Расписание врачей</h3>
+
+
+        <div style="overflow: auto;" >
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Специальность</th>
+            <th>Врач</th>
+            <th>Кабинет</th>
+            
+            {% for date in date_list %}
+            <th>{{ date|date:'d.m.Y' }},<br>{{ date|date:'D' }}
+            </th>
+
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for doctor in doctors %}
+            <tr>
+              <td>{{ doctor.doctorproperties.speciality }}</td>
+              <td>{{ doctor.last_name }} {{ doctor.first_name }} {{ doctor.patronymic }}</td>
+              <td>{{ doctor.doctorproperties.cabinet }}</td>
+              
+              {% for t in schedules|get_item:doctor.id %}
+                {%if request.user.is_staff%}
+                    <td><a href="#" onclick="openModal({{doctor.id}},'{{ doctor.last_name }} {{ doctor.first_name }} {{ doctor.patronymic }}' ,'{{ date_list|get_i:forloop.counter0|date:'d.m.Y'}}')">
+                        <b>{{t}}</b> 
+                        <img src="/static/admin/img/icon-changelink.svg" alt="Изменить">
+                    </a></td>
+                {% else %}
+                    <td>
+                        {% if t != 'не работает'%}
+                            <a href="#">
+                                <b>{{t}}</b>
+                            </a> 
+                        {%else%} 
+                            <b>{{t}}</b>
+                        {%endif%}
+                    </td>
+                {%endif%}
+
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    
+
+    </div>
+    {% if prev_week_url %}
+        <a href="{{ prev_week_url }}">
+            <button type="button" class="btn btn-primary float-start m-2"><< Прошлая неделя</button>
+        </a>
+    {% endif %}
+
+    {% if next_week_url %}
+        <a href="{{ next_week_url }}">
+            <button type="button" class="btn btn-primary float-end m-2">Следующая неделя >></button>
+        </a>
+    {% endif %}
+{%if request.user.is_staff%}
+    <div class="modal fade" id="exceptionModal" tabindex="-1" aria-labelledby="exceptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exceptionModalLabel">Временные изменения</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="exceptionForm" method="POST" action="/schedule/">
+            <!-- поле для выбранного врача -->
+            <div class="form-group mb-2">
+              <label for="doctorName">Врач</label>
+              <input type="text" class="form-control" id="doctorName" name="doctorName" readonly>
+            </div>
+            <!-- поле для даты начала -->
+            <div class="form-group mb-2">
+              <label for="startDate">Период с</label>
+              <input type="date" class="form-control" id="startDate" name="startDate">
+            </div>
+            <!-- поле для даты окончания -->
+            <div class="form-group mb-2">
+              <label for="endDate">Период до</label>
+              <input type="date" class="form-control" id="endDate" name="endDate">
+            </div>
+            <!-- поле для времени начала -->
+            <div class="form-group mb-2">
+              <label for="startTime">Время начала рабочего дня</label>
+              <input type="time" class="form-control" id="startTime" name="startTime">
+              <small class="form-text text-muted">Оставьте пустым для пропуска</small>
+            </div>
+            <!-- поле для времени окончания -->
+            <div class="form-group mb-2">
+              <label for="endTime">Время окончания рабочего дня</label>
+              <input type="time" class="form-control" id="endTime" name="endTime">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+              </div>
+        </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <script>
+    function openModal(doctorId, doctorName, date) {
+        const [day, month, year] = date.split('.');
+
+        // Находим элементы формы
+        var doctorNameInput = document.getElementById("doctorName");
+        var startDateInput = document.getElementById("startDate");
+        var endDateInput = document.getElementById("endDate");
+        var startTimeInput = document.getElementById("startTime");
+        var endTimeInput = document.getElementById("endTime");
+        var form = document.getElementById("exceptionForm");
+        
+        // Заполняем данные формы
+        doctorNameInput.value = doctorName;
+        d = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        startDateInput.value = d;
+        
+        endDateInput.value = d;
+        startTimeInput.value = "";
+        endTimeInput.value = "";
+      
+        // Открываем модальное окно
+        jQuery('#exceptionModal').modal('show');
+      
+        // Обрабатываем отправку формы
+        form.onsubmit = function (e) {
+          e.preventDefault();
+          // Собираем данные из формы
+          var startDate = startDateInput.value;
+          var endDate = endDateInput.value;
+          var startTime = startTimeInput.value;
+          var endTime = endTimeInput.value;
+      
+          // Отправляем данные на сервер
+          jQuery.ajax({
+            url: '/schedule/',
+            type: 'POST',
+            data: {
+              doctor_id: doctorId,
+              start_date: startDate,
+              end_date: endDate,
+              start_time: startTime,
+              end_time: endTime,
+              csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (data) {
+              // Закрываем модальное окно
+              $('#exceptionModal').modal('hide');
+              // Обновляем страницу
+              location.reload();
+            },
+            error: function () {
+              alert("Ошибка при сохранении исключения");
+            }
+          });
+        };
+      }
+      
+  </script>
+
+{%endif%}
+{%endblock%}

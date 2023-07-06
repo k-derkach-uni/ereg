@@ -1,0 +1,497 @@
+{% extends 'doctor_base.html' %}
+
+{% block title %}Очередь{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-12 col-xl-8">
+<div class="mb-3">
+{% if is_today %}
+<h3>Очередь на сегодня</h3>
+{% else %}
+<h3>Очередь на {{ selected_date }}</h3>
+<a href="{%url 'appointments:d_queue'%}">Вернуться к сегодняшнему дню</a>
+{% endif %}
+</div>
+{%if is_today%}
+<p><b>Пациентов в очереди: </b>{{ waiting_count }}</p>
+{%elif appointments_list.count%}
+<p><b>Записано пациентов: </b>{{ appointments_list.count }}</p>
+{%endif%}
+{% if not appointments_list %}
+<h5 class="text-center">На выбранный день никто не записан</h5>
+{% else %}
+<table class="table table-hover">
+<thead>
+    <tr>
+        <th>Время</th>
+        <th>ID</th>
+        <th>Пациент</th>
+        <th>Статус приема</th>
+        <th></th>
+        <th></th>
+    </tr>
+</thead>
+<tbody>
+    {% for appointment in appointments_list %}
+        <tr>
+            <td class="align-middle justify-content-center">{{ appointment.time }}</td>
+            <td class="align-middle justify-content-center">{{ appointment.patient.id }}</td>
+            <td class="align-middle justify-content-center">{{ appointment.patient.get_full_name }}</td>
+            <td class="align-middle ">
+                <span class=" justify-content-center badge w-100 {% if appointment.status == 'WAITING' %}bg-warning {% elif appointment.status == 'COMPLETED' %}bg-success {% elif appointment.status == 'MISSED' or  appointment.status == 'CANCELLED' or  appointment.status == 'PATIENT_CANCELLED' %}bg-danger{% endif %}">
+                {{ appointment.get_status }}
+                </span>
+            </td>
+            <td class="align-middle ">
+                {%if appointment.referral%}
+                <a href="#" data-appointment-id="{{ appointment.id }}" class="btn btn-sm btn-warning mx-1 info-appointment-btn" data-toggle="tooltip" title="Доп. информация" data-dateadded="{{appointment.referral.date_added|date:'d.m.Y'}}" data-diagnosis="{{appointment.referral.diagnosis}}" data-purpose="{{appointment.referral.purpose}}" data-refdoctor="{{appointment.referral.referring_doctor.get_full_name}} ({{appointment.referral.referring_doctor.doctorproperties.speciality}})">
+                    <i class="bi-info-lg"></i>
+                </a>
+                {%endif%}
+            </td>
+            <td class="align-middle">
+            <div class="d-flex  ">
+                <a href="#" class="btn btn-sm btn-outline-warning mx-1 ref-appointment-btn" data-toggle="tooltip" title="Направить">
+                    <i class="bi-file-earmark-medical"></i>
+                </a>
+                <a href="#" class="btn btn-sm btn-outline-info mx-1 service-appointment-btn" data-toggle="tooltip" title="Назначить услугу">
+                    <i class=" bi-capsule"></i>
+                </a>
+                {%if appointment.status == 'WAITING' and is_today%}
+                <a href="#" data-appointment-id="{{ appointment.id }}" class="confirm-appointment-btn btn btn-sm btn-outline-success mx-1" data-toggle="tooltip" title="Отметить как принятого">
+                    <i class="bi-check-lg"></i>
+                </a>
+                {%endif%}
+            </div>
+        </td>
+        </tr>
+    {% endfor %}
+</tbody>
+</table>
+{% endif %}
+</div>
+<div class="col-xl-4 d-none d-xl-block">
+<h5>Календарь рабочих дней</h5>
+<small class="form-text text-m ">Чтобы просмотреть другие приемы, нажмите на соответствующую дату</small>
+<div class="card border-primary my-3" style="max-width: 20rem;">
+<div class="card-body">
+<div class="calendar" id="calendar" style=""></div>
+</div>
+</div>
+<small class="form-text text-muted">Красным цветом отмечены Ваши выходные</small>
+</div>
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title" id="confirmModalLabel">Прием завершен?</h5>
+</div>
+<div class="modal-body">
+<p><b>Пациент: </b><span id="nametext"></span></p>
+<p><b>Время записи:</b> <span id="timetext"></span> </p>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+<a id="confirmBtn" href="#" class="btn btn-success">Пациент принят</a>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade" id="refModal" tabindex="-1" aria-labelledby="refModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+    <h5 class="modal-title" id="refModalLabel">Направить пациента</h5>
+</div>
+<div class="modal-body">
+    <p><b>Пациент: </b><span id="refnametext"></span></p>
+    <form id="refForm">
+        <div class="form-group">
+            <label for="speciality">Специальность врача</label>
+            <select class="form-control" id="speciality">
+                {% for speciality in specialities %}
+                    <option value="{{ speciality.id }}">{{ speciality.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="diagnosis">Диагноз</label>
+            <input type="text" class="form-control" id="diagnosis" placeholder="Введите диагноз" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label for="purpose">Назначение</label>
+            <input type="text" class="form-control" id="purpose" placeholder="Введите назначение" autocomplete="off">
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+    <button type="button" class="btn btn-success" id="createRefBtn">Создать направление</button>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+    <h5 class="modal-title" id="infoModalLabel">Пациент направлен другим специалистом</h5>
+</div>
+<div class="modal-body">
+    <p><b>Пациент: </b><span id="infonametext"></span></p>
+    <p><b>Направивший врач: </b><span id="infodoctornametext"></span></p>
+    <p><b>Дата создания направления: </b><span id="infodatetext"></span></p>
+    <p><b>Диагноз: </b><span id="infodiagnosistext"></span></p>
+    <p><b>Назначение: </b><span id="infopurpostext"></span></p>
+    
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+</div>
+</div>
+</div>
+</div>
+<div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+    <h5 class="modal-title" id="serviceModalLabel">Назначить услуги</h5>
+</div>
+<div class="modal-body">
+    <form id="serviceForm">
+        <div class="service-container">
+            <div class="form-group">
+                <label for="service">Услуга</label>
+                <select class="form-control service service-input" data-id="">
+                    <option value="">Выберите услугу</option>
+                    {% for service in services %}
+                    <option data-id="{{service.id}}" value="{{ service.id }}" data-price="{{ service.price }}">{{ service.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="hidden" class="service-price">
+            </div>
+            <div class="form-group">
+                <label for="quantity">Количество</label>
+                <input type="number" class="form-control quantity" placeholder="Введите количество" autocomplete="off" value="1">
+            </div>
+        </div>
+        <div class="additional-services">
+            <!-- Здесь будут добавленные дополнительные поля услуг -->
+        </div>
+        <a type="button" class="mt-3" id="addServiceBtn">Добавить услугу</a>
+    </form>
+    <div class="total-price">
+        Общая сумма: <span id="totalPrice">0</span> р.
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+    <button type="button" class="btn btn-success" id="createInvoiceBtn">Выставить счет</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+$(document).on('click', '#addServiceBtn', function() {
+var additionalServices = $('.additional-services');
+
+var serviceField = $('<div class="mt-3 form-group"></div>');
+serviceField.append('<label for="service">Услуга</label>');
+var serviceInput = $('<select class="form-control service service-input" data-id="">');
+serviceInput.append('<option value="">Выберите услугу</option>');
+{% for service in services %}
+serviceInput.append('<option data-id="{{service.id}}" value="{{ service.name }}" data-price="{{ service.price }}">{{ service.name }}</option>');
+{% endfor %}
+var priceInput = $('<input type="hidden" class="service-price">');
+serviceField.append(serviceInput);
+serviceField.append(priceInput);
+
+var quantityField = $('<div class="form-group"></div>');
+quantityField.append('<label for="quantity">Количество</label>');
+quantityField.append('<input type="number" class="form-control quantity" placeholder="Введите количество" autocomplete="off" value="1">');
+
+var removeLink = $('<a class="text-danger remove-service">Удалить услугу</a>');
+
+var serviceContainer = $('<div class="service-container"></div>');
+serviceContainer.append(serviceField);
+serviceContainer.append(quantityField);
+serviceContainer.append(removeLink);
+
+additionalServices.append(serviceContainer);
+
+// Инициализация обработчика выбора услуги
+serviceInput.on('change', function() {
+    var selectedOption = $(this).find('option:selected');
+    var price = selectedOption.data('price');
+    priceInput.val(price);
+    var id = selectedOption.attr('data-id');
+    serviceInput.attr('data-id', id);
+    updateTotalPrice();
+});
+
+// Инициализация обработчика удаления услуги
+removeLink.on('click', function() {
+    $(this).closest('.service-container').remove();
+    updateTotalPrice();
+});
+
+// Инициализация обработчика изменения количества
+quantityField.find('.quantity').on('change', function() {
+    updateTotalPrice();
+});
+
+updateTotalPrice();
+});
+
+$(document).on('click', '#createInvoiceBtn', function() {
+var services = $('.service-container');
+var data = [];
+
+services.each(function() {
+    var selectedService = $(this).find('.service').val();
+    var selectedQuantity = $(this).find('.quantity').val();
+    var selectedPrice = $(this).find('.service-price').val();
+    var selectedId = $(this).find('.service').attr('data-id');
+
+    data.push({
+    service: selectedService,
+    quantity: selectedQuantity,
+    price: selectedPrice,
+    id: selectedId
+    });
+});
+
+var requestData = {
+    patient_id: patient_id, // Добавление patient_id в данные запроса
+    services: data,
+    csrfmiddlewaretoken :'{{ csrf_token }}'
+    };
+console.log(requestData);
+
+$.ajax({
+    url: "{% url 'payments:d_create_invoice' %}",
+    type: 'POST',
+    data: JSON.stringify(requestData),
+    contentType: 'application/json',
+    beforeSend: function(xhr, settings) {
+    xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+    },
+    success: function(response) {
+    console.log('Invoice created:', response);
+    // Действия при успешном создании invoice
+    },
+    error: function(error) {
+    console.error('Failed to create invoice:', error);
+    // Действия при ошибке создания invoice
+    }
+});
+
+$('#serviceModal').modal('hide');
+});
+
+
+function updateTotalPrice() {
+var totalPrice = 0;
+
+$('.service-container').each(function() {
+    var priceInput = $(this).find('.service-price');
+    var quantityInput = $(this).find('.quantity');
+
+    var price = parseFloat(priceInput.val());
+    var quantity = parseFloat(quantityInput.val());
+
+    if (!isNaN(price) && !isNaN(quantity)) {
+        totalPrice += price * quantity;
+    }
+});
+
+$('#totalPrice').text(totalPrice.toFixed(2));
+}
+var patient_id;
+$(document).on('click', '.service-appointment-btn', function() {
+var row = $(this).data('row');
+var appointmentId = $(this).data('appointment-id');
+var rowIndex = $(this).closest('tr').index();
+    
+patient_id = parseInt($('table tr').eq(rowIndex+1).find('td:eq(1)').text());
+// Отобразить модальное окно с подтверждением
+$('#serviceModal').modal('show');
+});
+
+$(document).ready(function() {
+
+$(document).on('change', '.service-input', function() {
+    var selectedService = $(this).val();
+    var selectedPrice = $(this).find(':selected').data('price');
+    var selectedOption = $(this).find('option:selected');
+    var id = selectedOption.attr('data-id');
+    $(this).attr('data-id', id);
+    $(this).siblings('.service-price').val(selectedPrice);
+
+    updateTotalPrice();
+});
+
+
+$(document).on('change', '.quantity', function() {
+    updateTotalPrice();
+});
+
+$(document).on('click', '.info-appointment-btn', function() {
+    var row = $(this).data('row');
+    var appointmentId = $(this).data('appointment-id');
+    // Отобразить модальное окно с подтверждением
+    $('#infoModal').modal('show');
+    
+    var rowIndex = $(this).closest('tr').index();
+    $('#infonametext').text($('table tr').eq(rowIndex+1).find('td:eq(2)').text());
+    $('#infodoctornametext').text($(this).data('refdoctor'));
+    $('#infodatetext').text($(this).data('dateadded'));
+    $('#infodiagnosistext').text($(this).data('diagnosis'));
+    $('#infopurpostext').text($(this).data('purpose'));
+    });
+$(document).on('click', '.ref-appointment-btn', function() {
+    var row = $(this).data('row');
+    var appointmentId = $(this).data('appointment-id');
+
+    // Отобразить модальное окно с подтверждением
+    $('#refModal').modal('show');
+    var rowIndex = $(this).closest('tr').index();
+        
+    // Получение текста из первого столбца таблицы для выбранной строки
+    var name = $('table tr').eq(rowIndex+1).find('td:eq(2)').text();
+    $('#refnametext').text(name);
+    $('#refModal').on('click', '#createRefBtn', function() {
+        var speciality = parseInt($('#speciality').val());
+        var diagnosis = $('#diagnosis').val();
+        var purpose = $('#purpose').val();
+        var patient_id = parseInt($('table tr').eq(rowIndex+1).find('td:eq(1)').text());
+        // Отправить запрос на сервер
+        $.ajax({
+            url: "{% url 'appointments:d_create_referral' %}",
+            method: 'POST',
+            data: {
+                patient_id: patient_id,
+                speciality: speciality,
+                diagnosis: diagnosis,
+                purpose: purpose,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                // Обработка успешного ответа от сервера
+                console.log(response);
+                window.location.href = "{% url 'appointments:d_queue' %}";
+                // Дополнительный код, если необходимо
+            },
+            error: function(xhr, errmsg, err) {
+                // Обработка ошибки
+                console.log(xhr.status + ': ' + xhr.responseText);
+                // Дополнительный код, если необходимо
+            }
+        });
+    });
+    
+    });
+    $(document).on('click', '.btn-secondary', function() {
+    // Закрыть модальное окно
+    $(this).closest('.modal').modal('hide');
+    });
+    
+
+
+$(document).on('click', '.confirm-appointment-btn', function() {
+    var row = $(this).data('row');
+    var appointmentId = $(this).data('appointment-id');
+
+    // Отобразить модальное окно с подтверждением
+    $('#confirmModal').modal('show');
+    
+    var rowIndex = $(this).closest('tr').index();
+    
+    // Получение текста из первого столбца таблицы для выбранной строки
+        
+    $('#nametext').text($('table tr').eq(rowIndex+1).find('td:eq(2)').text());
+    $('#timetext').text($('table tr').eq(rowIndex+1).find('td:eq(0)').text());
+    
+    // Обработчик события нажатия кнопки подтверждения в модальном окне
+    $('#confirmModal').on('click', '#confirmBtn', function() {
+        var selectedDate = $('#selected_date').val();
+        // Отправить запрос на сервер
+        $.ajax({
+        url: "{%url 'appointments:d_confirm_appointment'%}",
+        method: 'POST',
+        data: {
+            appointment_id: appointmentId,
+            
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(response) {
+            // Обработка успешного ответа от сервера
+            console.log(response);
+            window.location.href = "{% url 'appointments:d_queue' %}";
+            // Дополнительный код, если необходимо
+        },
+        error: function(xhr, errmsg, err) {
+            // Обработка ошибки
+            
+            console.log(xhr.status + ': ' + xhr.responseText);
+            // Дополнительный код, если необходимо
+        }
+        });
+    
+        // Закрыть модальное окно
+        $('#confirmModal').modal('hide');
+    });
+    });
+    $(document).on('click', '.btn-secondary', function() {
+    // Закрыть модальное окно
+    $(this).closest('.modal').modal('hide');
+    });
+    
+
+var selectedDate = new Date("{{ selected_date|date:'Y-m-d' }}T00:00:00");
+var dayoffs = [
+{% for dayoff in dayoffs %}
+    new Date("{{ dayoff|date:'Y-m-d' }}T00:00:00").toISOString().split('T')[0],
+{% endfor %}
+];
+
+// Преобразование даты в строку формата "yyyy-mm-dd" с учетом временной зоны
+var selectedDateString = selectedDate.toISOString().split('T')[0];
+$.fn.datepicker.defaults.language = 'ru';
+// Инициализация календаря
+$('#calendar').datepicker({
+    format: 'yyyy-mm-dd',
+    todayHighlight: true,
+    autoclose: true,
+    language: 'ru',
+    beforeShowDay: function(date) {
+    var dateString = date.toISOString().split('T')[0];
+
+    // Проверка, является ли день выбранным днем
+    if (dateString === selectedDateString) {
+        return { classes: 'selected-day' };
+    }
+    var isDayOff = dayoffs.indexOf(dateString) !== -1;
+
+    if (isDayOff) {
+        
+        return {
+        classes: 'dayoff',
+        tooltip: 'Day Off',
+        };
+    }
+
+    },
+});
+
+// Обработчик события выбора даты
+$('#calendar').on('changeDate', function(e) {
+    var selectedDate = e.format();
+    var url = '{%url "appointments:d_queue"%}/' + selectedDate + '/';
+    window.location.href = url;
+});
+});
+
+</script>
+{% endblock %}
