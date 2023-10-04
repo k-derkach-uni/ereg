@@ -19,7 +19,7 @@
         {% if user.is_staff %}
         <div id="user-tools">
             {% block welcome-msg %}
-                {{user.get_short_name}}
+                {{user}}
             {% endblock %}
             {% block userlinks %}
                 {% if site_url %}

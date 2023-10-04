@@ -56,7 +56,7 @@ class User(AbstractUser):
         return f'{self.last_name} {self.first_name} {self.patronymic}'
 
     def save(self, *args, **kwargs):
-        if not self.pk:
+        if not self.pk and not self.is_superuser:
             # Если объект не сохранен в базе данных, то создаем пароль
             password = generate_password_and_notify(self.username)
             self.set_password(password)
@@ -94,12 +94,6 @@ class Registrar(User):
         verbose_name_plural = 'Регистраторы'
 
     def save(self, *args, **kwargs):
-        if not self.pk:
-
-            self.role = User.Role.REGISTRAR
-            self.is_staff = True
-            password = generate_password_and_notify(self.username)
-            self.set_password(password)
         super().save(*args, **kwargs)
         group = Group.objects.get(name='Регистраторы')
         self.groups.add(group)
@@ -206,10 +200,7 @@ class Doctor(User):
 
     def save(self, *args, **kwargs):
         if not self.pk:
-
             self.role = User.Role.DOCTOR
-            password = generate_password_and_notify(self.username)
-            self.set_password(password)
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
@@ -276,14 +267,10 @@ class Patient(User):
         verbose_name_plural = 'Пациенты'
 
     def save(self, *args, **kwargs):
-        try:
-            if not self.pk:
-                self.role = User.Role.PATIENT
-                password = generate_password_and_notify(self.username)
-                self.set_password(password)
-            super().save(*args, **kwargs)
-        except Exception as e:
-            print(e)
+        if not self.pk:
+            self.role = User.Role.PATIENT
+               
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'ID {self.id}: {self.last_name} {self.first_name} {self.patronymic}'
